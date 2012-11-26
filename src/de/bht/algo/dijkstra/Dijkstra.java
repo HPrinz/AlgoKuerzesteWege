@@ -4,80 +4,201 @@ import graph.Edge;
 import graph.Graph;
 import graph.Vertex;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import javax.swing.JOptionPane;
+
+/**
+ * Implementierung des Dijkstra-Algorithmus für Graphen mit Knoten und Kanten
+ * 
+ * @author Hanna Prinz
+ * @author Hala Basali
+ * @author Jan Zimmermann
+ */
 public class Dijkstra {
 
   private final Graph<Vertex, Edge<Vertex>> graph;
-  private Vertex startVertex;
+  private final Vertex startVertex;
 
-  private final String[] col;
-  private final int[] dist;
   private final Vertex[] pred;
 
-  private final String WEISS = "weiss";
-  private final String GRAU = "grau";
-  private final String SCHWARZ = "schwarz";
-
   private final PriorityQueue<Vertex> queue;
+  private Vertex endVertex;
 
+  /**
+   * Konstruktor für den Dijkstra-Algorithmus
+   * 
+   * @param graph
+   *          der Graph auf den wir den Dijkstra-Algorithmus anwenden möchten
+   * @param startpoint
+   *          die Id des Knotens von dem wir starten möchten
+   */
   public Dijkstra(Graph<Vertex, Edge<Vertex>> graph, int startpoint) {
     this.graph = graph;
     this.startVertex = graph.getVertex(startpoint);
+
     int numVertices = graph.getVertices().size();
-    // Arrays initialisieren
-    col = new String[numVertices];
-    dist = new int[numVertices];
+
+    // Array initialisieren
     pred = new Vertex[numVertices];
-    queue = new PriorityQueue<>();
+
+    // Queue initialsieren
+    Comparator<Vertex> comparator = new DijkstraVertexComparator();
+    queue = new PriorityQueue<Vertex>(numVertices, comparator);
   }
 
-  public Graph<Vertex, Edge<Vertex>> getGraph() {
-    return graph;
-  }
+  /**
+   * startet den Dijkstra-Algorithmus
+   * 
+   * @param endpoint
+   *          "alle" wenn die Entfernung zu allen Punkten gesucht ist, sonst die
+   *          Id des Endknotens als String
+   * @return ein String mit der Benutzerausgabe
+   */
+  public String startDijkstra(String endpoint) {
 
-  public void startDijkstra() {
-    init();
+    // initialsieren der Standardwerte
+    if (!init()) {
+      return "";
+    }
+
+    // AUSGABE
+    StringBuilder returnValue = new StringBuilder();
+    returnValue.append("Wir beginnen bei Knoten " + startVertex.getId() + "\n");
+
+    // ist ein endVertex gegeben? Wenn nicht endVertex auf null setzen
+    if (!endpoint.equals("alle")) {
+      this.endVertex = graph.getVertex(Integer.parseInt(endpoint));
+      returnValue.append("Ziel ist Knoten " + endVertex.getId() + "\n");
+    } else {
+      this.endVertex = null;
+      returnValue.append("Ziel ist die kürzeste Verbindung zu allen Knoten. \n");
+    }
+
+    StringBuilder ergebnisReihenfolge = new StringBuilder();
+    StringBuilder knotenreihe = new StringBuilder();
+
     while (!queue.isEmpty()) {
+      // nimm den Knoten mit der kleinsten Entfernung aus der Queue
+      // (Comparable-Implementierung von Vertex siehe Methode
+      // graph.Vertex.compareTo(Vertex))
       Vertex currVertex = queue.poll();
-      System.out.println("Neuer CurrentVertex ist " + currVertex.getId());
+      // wenn der Knoten unerreichbar ist
+      if (currVertex.getDist() == Integer.MAX_VALUE) {
+        continue;
+      }
 
+      // iteriere durch alle Nachbarknoten des aktuellen Knotens...
       for (Vertex neighbor : graph.getNeighbours(currVertex)) {
+        // ...die noch nicht abgearbeitet sind
         if (queue.contains(neighbor)) {
-          relax(currVertex, neighbor);
+          // relaxiere die Kante zwischen den beiden Knoten
+          String relaxReturn = relax(currVertex, neighbor);
+          returnValue.append(relaxReturn + "\n");
         }
+      }
+
+      // wenn es kein EndVertex gibt, gib alle Distanzen aus
+      if (endVertex == null) {
+        ergebnisReihenfolge.append(" Distanz " + startVertex.getId() + " \u2192 " + currVertex.getId() + ": "
+            + currVertex.getDist() + " über Knoten " + knotenreihe.toString() + "\n");
+      }
+
+      // wenn es einen EndVertex gibt und dieser der aktuelle Vertex ist, kann
+      // hier abgebrochen werden
+      if (endVertex != null && currVertex.getId() == endVertex.getId()) {
+        ergebnisReihenfolge.append(" Distanz " + startVertex.getId() + "\u2192" + currVertex.getId() + ": "
+            + currVertex.getDist() + " über Knoten " + knotenreihe.toString() + "\n");
+        break;
+      }
+
+      knotenreihe.append(currVertex.getId() + ", ");
+    }
+
+    // TODO funktioniert der Algorithmus richtig?
+
+    // letzen "-->" abscheiden und den String zurück geben
+    returnValue.append(ergebnisReihenfolge.substring(0, ergebnisReihenfolge.length() - 1));
+    return returnValue.append("\n").toString();
+  }
+
+  /**
+   * initialisieren der Variablen (alle Entfernungen auf maximal setzen, ...)
+   * 
+   * @return false wenn der graph negative Kantengewichte hat, true wenn nicht
+   */
+  private boolean init() {
+    for (Object i : graph.getEdgeMap().values()) {
+      Integer integer = (Integer) i;
+
+      // wenn es nagative Werte gibt, gib eine Warnung aus
+      if (Math.abs(integer) != integer) {
+        JOptionPane.showMessageDialog(null,
+            "Dijkstra kann auf diesen Graph nicht angewendet werden. Der Graph enthält negative Kantengewichte.",
+            "Fehler", JOptionPane.ERROR_MESSAGE);
+        return false;
       }
     }
 
-    // TODO funktioniert das richtig?
-    // TODO ausgeben, welche Reihenfolge der Graph jetzt hat
-  }
+    startVertex.setDist(0);
+    queue.add(startVertex);
 
-  private void init() {
     for (Vertex v : graph.getVertices()) {
-      col[v.getId()] = WEISS;
-      dist[v.getId()] = Integer.MAX_VALUE;
-      pred[v.getId()] = null;
-      queue.add(v);
+      if (v.getId() != startVertex.getId()) {
+
+        v.setDist(Integer.MAX_VALUE);
+        pred[v.getId()] = null;
+
+        queue.add(v);
+      }
     }
-    dist[startVertex.getId()] = 0;
+
+    startVertex.setDist(0);
+    return true;
   }
 
-  private void relax(Vertex currVertex, Vertex neighbor) {
-    int weight = (int) graph.getEdgeMap().get(currVertex.getId(), neighbor.getId());
+  /**
+   * Prüft ob eine Verbesserung der Entfernung zum Nachbarknoten
+   * <code>neighbor</code> möglich ist
+   * 
+   * @param currVertex
+   *          der aktuelle Knoten deren Kanten wir betrachten
+   * @param neighbor
+   *          der Nachbarknoten von <code>currVertex</code> den wir prüfen
+   *          möchten
+   * @return ein String der in der Ausgabe erscheinen soll
+   */
+  private String relax(Vertex currVertex, Vertex neighbor) {
+    StringBuilder returnValue = new StringBuilder("");
 
-    System.out.println("Weight von " + currVertex.getId() + " und " + neighbor.getId() + " ist " + weight);
+    // Kantengewicht der Kante zwischen dem aktuellen Knoten und seinem Nachbarn
+    Object o = graph.getEdgeMap().get(currVertex.getId(), neighbor.getId());
+    if (o == null) {
+      o = graph.getEdgeMap().get(neighbor.getId(), currVertex.getId());
+    }
+    int weight = (int) o;
 
+    // gesamte alternative Distanz zum Nachbarknoten
     int alternativeDist = currVertex.getDist() + weight;
 
+    // wenn alternative Distanz kürzer als die aktuelle ist (Verbesserung)
     if (alternativeDist < neighbor.getDist()) {
+
+      // textarea-Ausgabe
+      String oldDistance = "" + neighbor.getDist();
+      if (neighbor.getDist() == Integer.MAX_VALUE) {
+        oldDistance = "\u221E";
+      }
+      returnValue.append("Kante zwischen " + currVertex.getId() + " und " + neighbor.getId() + " wurde verbessert ("
+          + oldDistance + " \u21D2 " + alternativeDist + ")");
+
+      // neue Distanz setzen
       neighbor.setDist(alternativeDist);
+      // neuen Vorgänger setzen
       pred[neighbor.getId()] = currVertex;
     }
-  }
 
-  public void setStartVertex(int startpoint) {
-    this.startVertex = graph.getVertex(startpoint);
+    return returnValue.toString();
   }
-
 }

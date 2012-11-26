@@ -29,7 +29,7 @@ import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
 /**
- * Diese Klasse erstellt eine GUI zum Erstellen von Graphen.
+ * Diese Klasse erstellt eine GUI.
  * 
  * @author Hala Basali
  * @author Hanna Prinz
@@ -53,6 +53,8 @@ public class DijkstraGUI extends JFrame {
   private final JLabel lblStartknoten;
   private final JPanel startEndPanel;
   private Graph<Vertex, Edge<Vertex>> graph;
+  private final JLabel lblZielknoten;
+  private final JComboBox<String> zielComboBox;
 
   /**
    * Erstellt die GUI
@@ -107,6 +109,12 @@ public class DijkstraGUI extends JFrame {
     startComboBox = new JComboBox<String>();
     startEndPanel.add(startComboBox);
 
+    lblZielknoten = new JLabel("Zielknoten");
+    startEndPanel.add(lblZielknoten);
+
+    zielComboBox = new JComboBox<String>();
+    startEndPanel.add(zielComboBox);
+
     richtungsAuswahlPanel = new JPanel();
     methodenAuswahlPanel.add(richtungsAuswahlPanel);
     richtungsAuswahlPanel.setBorder(null);
@@ -155,12 +163,17 @@ public class DijkstraGUI extends JFrame {
       @Override
       public void caretUpdate(CaretEvent e) {
         startComboBox.removeAllItems();
+        zielComboBox.removeAllItems();
 
         if (textField.getText().trim().length() > 0) {
           graph = GraphLesen.FileToWeightedGraph(textField.getText(), rdbtnGerichtet.isSelected());
+
+          zielComboBox.addItem("alle");
           for (Vertex v : graph.getVertices()) {
             startComboBox.addItem(v.toString());
+            zielComboBox.addItem(v.toString());
           }
+
         }
       }
     });
@@ -186,10 +199,8 @@ public class DijkstraGUI extends JFrame {
   }
 
   /**
-   * Diese Methode liest die Konfiguration des Benutzes (Dateiname, Radiobuttons
-   * und Comboboxwerte) aus und ruft die entsprechenden Methoden der
-   * BreadthFirstSearch auf.
-   * 
+   * Diese Methode liest die Konfiguration des Benutzes (Dateiname, Startwert)
+   * aus und startet den Dijkstra-Algorithmus
    */
   private void callDijkstra() {
 
@@ -207,10 +218,10 @@ public class DijkstraGUI extends JFrame {
     // die Zahl aus der Combobox extrahieren
     int startpoint = Integer.parseInt((String) startComboBox.getSelectedItem());
 
-    //
     Dijkstra dijkstra = new Dijkstra(graph, startpoint);
-    dijkstra.startDijkstra();
+    String dijkstraReturn = dijkstra.startDijkstra((String) zielComboBox.getSelectedItem());
 
+    textArea.append(dijkstraReturn + "\n");
     textArea.append("ENDE \n \n");
 
   }

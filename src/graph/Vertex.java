@@ -1,5 +1,6 @@
 package graph;
 
+
 /**
  * Eine Klasse, die Knoten eines Graphen repr�sentiert
  * 
@@ -7,7 +8,7 @@ package graph;
  * @version 1.0
  * @param <T>
  */
-public class Vertex implements Comparable<Vertex> {
+public class Vertex {
 
   @Override
   public int hashCode() {
@@ -69,19 +70,5 @@ public class Vertex implements Comparable<Vertex> {
   @Override
   public String toString() {
     return new Integer(id).toString();
-  }
-
-  @Override
-  /**
-   * Added for Dijkstra
-   */
-  public int compareTo(Vertex o) {
-    if (dist < o.getDist()) {
-      return -1;
-    } else if (o.getDist() == dist) {
-      return 0;
-    } else {
-      return 1;
-    }
   }
 }

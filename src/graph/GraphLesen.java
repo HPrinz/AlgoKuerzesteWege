@@ -70,6 +70,7 @@ public class GraphLesen {
         A[i][1] = u;
       }
     } catch (Exception e) {
+      e.printStackTrace();
       System.out.println("Einlesen nicht erfolgreich");
       System.out.println(e.getMessage());
     }
@@ -142,6 +143,7 @@ public class GraphLesen {
         A[i][2] = w;
       }
     } catch (Exception e) {
+      e.printStackTrace();
       System.out.println("Einlesen nicht erfolgreich");
       System.out.println(e.getMessage());
     }
