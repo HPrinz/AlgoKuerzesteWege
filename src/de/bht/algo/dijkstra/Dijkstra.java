@@ -10,8 +10,6 @@ import java.util.PriorityQueue;
 
 import javax.swing.JOptionPane;
 
-import sun.org.mozilla.javascript.ast.ForInLoop;
-
 /**
  * Implementierung des Dijkstra-Algorithmus f체r Graphen mit Knoten und Kanten
  * 
@@ -25,7 +23,7 @@ public class Dijkstra {
   private final Vertex startVertex;
 
   private final Vertex[] pred;
-  private final ArrayList< Vertex > knoten;
+  private final ArrayList<Vertex> knoten;
 
   private final PriorityQueue<Vertex> queue;
   private Vertex endVertex;
@@ -43,12 +41,10 @@ public class Dijkstra {
     this.startVertex = graph.getVertex(startpoint);
 
     int numVertices = graph.getVertices().size();
-    
-    
 
     // Array initialisieren
     pred = new Vertex[numVertices];
-    knoten = new ArrayList< Vertex >();
+    knoten = new ArrayList<Vertex>();
 
     // Queue initialsieren
     Comparator<Vertex> comparator = new DijkstraVertexComparator();
@@ -72,7 +68,7 @@ public class Dijkstra {
 
     // AUSGABE
     StringBuilder returnValue = new StringBuilder();
-    returnValue.append("Wir beginnen bei Knoten " + startVertex.getId() + "\n");
+    returnValue.append("Start ist Knoten " + startVertex.getId() + "\n");
 
     // ist ein endVertex gegeben? Wenn nicht endVertex auf null setzen
     if (!endpoint.equals("alle")) {
@@ -84,20 +80,13 @@ public class Dijkstra {
     }
 
     StringBuilder ergebnisReihenfolge = new StringBuilder();
-    StringBuilder knotenreihe = new StringBuilder();
 
     while (!queue.isEmpty()) {
       // nimm den Knoten mit der kleinsten Entfernung aus der Queue
       // (Comparable-Implementierung von Vertex siehe Methode
       // graph.Vertex.compareTo(Vertex))
       Vertex currVertex = queue.poll();
-      
-      // F웦 Auswertung speichern
-      if ( currVertex != startVertex) {
-    	  System.out.println(currVertex + "---");
-    	  knoten.add( currVertex );
-      }
-      
+
       // wenn der Knoten unerreichbar ist
       if (currVertex.getDist() == Integer.MAX_VALUE) {
         continue;
@@ -116,29 +105,27 @@ public class Dijkstra {
       // wenn es kein EndVertex gibt, gib alle Distanzen aus
       if (endVertex == null) {
         ergebnisReihenfolge.append(" Distanz " + startVertex.getId() + " \u2192 " + currVertex.getId() + ": "
-            + currVertex.getDist() + " 체ber Knoten " + knotenreihe.toString() + "\n");
+            + currVertex.getDist() + " 체ber Knoten " + pathfinder(currVertex) + "\n");
       }
 
       // wenn es einen EndVertex gibt und dieser der aktuelle Vertex ist, kann
       // hier abgebrochen werden
-      if (endVertex != null && currVertex.getId() == endVertex.getId()) {
+      else if (endVertex != null && currVertex.getId() == endVertex.getId()) {
         ergebnisReihenfolge.append(" Distanz " + startVertex.getId() + "\u2192" + currVertex.getId() + ": "
-            + currVertex.getDist() + " 체ber Knoten " + knotenreihe.toString() + "\n");
+            + currVertex.getDist() + " 체ber Knoten " + pathfinder(endVertex) + "\n");
         break;
       }
 
-      knotenreihe.append(currVertex.getId() + ", ");
     }
 
     // TODO funktioniert der Algorithmus richtig?
-    
-    for ( Vertex v : knoten ) {
-    	System.out.println("K " + pathfinder( v ));
-	}
-
 
     // letzen "-->" abscheiden und den String zur체ck geben
-    returnValue.append(ergebnisReihenfolge.substring(0, ergebnisReihenfolge.length() - 1));
+    if (ergebnisReihenfolge.length() >= 2) {
+      returnValue.append(ergebnisReihenfolge.substring(0, ergebnisReihenfolge.length() - 1));
+    } else {
+      returnValue.append("Keine Verbindung gefunden");
+    }
     return returnValue.append("\n").toString();
   }
 
@@ -220,27 +207,25 @@ public class Dijkstra {
 
     return returnValue.toString();
   }
-  
+
   private String pathfinder(Vertex v) {
-	  String path = "";
-	  // Vorg둵ger des Knotens
-	  Vertex tmp = v;
-	  while (!( tmp == startVertex ) ) {
-		  tmp = findPred( tmp );
-		  path.concat( tmp.getId() + "-->" );
-	  }
-	  return path;
+
+    StringBuilder path = new StringBuilder("" + v.getId());
+
+    while (v.getId() != startVertex.getId()) {
+      v = findPred(v);
+      if (v != null) {
+        path.append("\u21D0" + v.getId());
+      } else {
+        return path.toString();
+      }
+
+    }
+    return path.toString();
   }
 
-private Vertex findPred( Vertex v ) {
-	Vertex vorgaenger;
-	vorgaenger = pred[v.getId()];
-	/*
-	 *  hier der Fehler: Vorg둵ger ist NULL
-	 *  weil letzter Wert nicht 웑erpr웖t wird
-	 */
-	System.out.println("V " + v);
-	System.out.println("VOR " + vorgaenger);
-	return vorgaenger;
-}
+  private Vertex findPred(Vertex v) {
+    Vertex vorgaenger = pred[v.getId()];
+    return vorgaenger;
+  }
 }
