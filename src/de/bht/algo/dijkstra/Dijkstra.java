@@ -4,10 +4,13 @@ import graph.Edge;
 import graph.Graph;
 import graph.Vertex;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import javax.swing.JOptionPane;
+
+import sun.org.mozilla.javascript.ast.ForInLoop;
 
 /**
  * Implementierung des Dijkstra-Algorithmus f√ºr Graphen mit Knoten und Kanten
@@ -22,6 +25,7 @@ public class Dijkstra {
   private final Vertex startVertex;
 
   private final Vertex[] pred;
+  private final ArrayList< Vertex > knoten;
 
   private final PriorityQueue<Vertex> queue;
   private Vertex endVertex;
@@ -39,9 +43,12 @@ public class Dijkstra {
     this.startVertex = graph.getVertex(startpoint);
 
     int numVertices = graph.getVertices().size();
+    
+    
 
     // Array initialisieren
     pred = new Vertex[numVertices];
+    knoten = new ArrayList< Vertex >();
 
     // Queue initialsieren
     Comparator<Vertex> comparator = new DijkstraVertexComparator();
@@ -84,6 +91,13 @@ public class Dijkstra {
       // (Comparable-Implementierung von Vertex siehe Methode
       // graph.Vertex.compareTo(Vertex))
       Vertex currVertex = queue.poll();
+      
+      // Für Auswertung speichern
+      if ( currVertex != startVertex) {
+    	  System.out.println(currVertex + "---");
+    	  knoten.add( currVertex );
+      }
+      
       // wenn der Knoten unerreichbar ist
       if (currVertex.getDist() == Integer.MAX_VALUE) {
         continue;
@@ -117,6 +131,11 @@ public class Dijkstra {
     }
 
     // TODO funktioniert der Algorithmus richtig?
+    
+    for ( Vertex v : knoten ) {
+    	System.out.println("K " + pathfinder( v ));
+	}
+
 
     // letzen "-->" abscheiden und den String zur√ºck geben
     returnValue.append(ergebnisReihenfolge.substring(0, ergebnisReihenfolge.length() - 1));
@@ -201,4 +220,27 @@ public class Dijkstra {
 
     return returnValue.toString();
   }
+  
+  private String pathfinder(Vertex v) {
+	  String path = "";
+	  // Vorgänger des Knotens
+	  Vertex tmp = v;
+	  while (!( tmp == startVertex ) ) {
+		  tmp = findPred( tmp );
+		  path.concat( tmp.getId() + "-->" );
+	  }
+	  return path;
+  }
+
+private Vertex findPred( Vertex v ) {
+	Vertex vorgaenger;
+	vorgaenger = pred[v.getId()];
+	/*
+	 *  hier der Fehler: Vorgänger ist NULL
+	 *  weil letzter Wert nicht überprüft wird
+	 */
+	System.out.println("V " + v);
+	System.out.println("VOR " + vorgaenger);
+	return vorgaenger;
+}
 }
